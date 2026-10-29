@@ -5,11 +5,11 @@
 
 ## 1. Overview
 
-This project implements the **Dupire Local Volatility Model** in Python, covering the construction of a synthetic implied volatility surface, the calibration of local volatility, and the repricing of European call options.
+This project implements the **Dupire Local Volatility Model** in Python, from the construction of a synthetic implied volatility surface to local volatility calibration and European option repricing.
 
-The objective is to understand how implied volatility information can be transformed into a state- and time-dependent volatility function, and to evaluate the ability of the resulting model to reproduce European option prices.
+The objective is to understand how market-implied volatility information can be transformed into a state- and time-dependent volatility function, and to evaluate whether the resulting model can reproduce European call option prices.
 
-The implementation also explores numerical challenges associated with Dupire calibration, particularly the instability of price derivatives at short maturities.
+The project also examines the numerical challenges associated with Dupire calibration, particularly the instability of price derivatives at short maturities.
 
 ## 2. Mathematical Framework
 
@@ -17,25 +17,25 @@ The implementation also explores numerical challenges associated with Dupire cal
 
 Under the risk-neutral measure, the underlying asset follows:
 
-$$
+```math
 dS_t = (r-q)S_t\,dt + \sigma_{\mathrm{loc}}(S_t,t)S_t\,dW_t
-$$
+```
 
 where:
 
-- $S_t$: underlying asset price
-- $r$: risk-free interest rate
-- $q$: continuous dividend yield
-- $\sigma_{\mathrm{loc}}(S_t,t)$: instantaneous local volatility
-- $W_t$: Brownian motion under the risk-neutral measure
+- $S_t$ is the underlying asset price.
+- $r$ is the risk-free interest rate.
+- $q$ is the continuous dividend yield.
+- $\sigma_{\mathrm{loc}}(S_t,t)$ is the instantaneous local volatility.
+- $W_t$ is a Brownian motion under the risk-neutral measure.
 
-Unlike Black-Scholes, which assumes constant volatility, the local volatility model allows volatility to vary with both the underlying asset price and time.
+Unlike the Black-Scholes model, which assumes constant volatility, the local volatility framework allows volatility to depend on both the underlying asset price and time.
 
 ### 2.2. Dupire's Formula
 
-Dupire's formula establishes a relationship between the European call price surface and instantaneous local variance:
+Dupire's formula recovers local variance from a surface of European call option prices:
 
-$$
+```math
 \sigma_{\mathrm{loc}}^2(K,T)
 =
 \frac{
@@ -47,7 +47,7 @@ qC
 }{
 \frac{1}{2}K^2\frac{\partial^2 C}{\partial K^2}
 }
-$$
+```
 
 Here, $C(K,T)$ denotes the European call option price for strike $K$ and maturity $T$.
 
@@ -55,25 +55,25 @@ The formula requires three derivatives.
 
 **Maturity derivative**
 
-$$
+```math
 \frac{\partial C}{\partial T}
-$$
+```
 
-Measures how the call price changes as maturity increases, holding strike constant.
+Measures how the call price changes as maturity increases, holding the strike constant.
 
 **First strike derivative**
 
-$$
+```math
 \frac{\partial C}{\partial K}
-$$
+```
 
 Measures the sensitivity of the call price to changes in strike.
 
 **Second strike derivative**
 
-$$
+```math
 \frac{\partial^2 C}{\partial K^2}
-$$
+```
 
 Measures the curvature of the call price with respect to strike.
 
@@ -83,29 +83,29 @@ Under standard no-arbitrage assumptions, European call prices must be convex in 
 
 The initial implementation used finite differences to approximate the derivatives required by Dupire's formula.
 
-The first strike derivative can be approximated as:
+For a strike increment $h$, the first strike derivative can be approximated by:
 
-$$
+```math
 \frac{\partial C}{\partial K}
 \approx
 \frac{C(K+h,T)-C(K-h,T)}{2h}
-$$
+```
 
 The second strike derivative is approximated by:
 
-$$
+```math
 \frac{\partial^2 C}{\partial K^2}
 \approx
 \frac{C(K+h,T)-2C(K,T)+C(K-h,T)}{h^2}
-$$
+```
 
 Similarly, the maturity derivative can be approximated by:
 
-$$
+```math
 \frac{\partial C}{\partial T}
 \approx
 \frac{C(K,T+\Delta T)-C(K,T-\Delta T)}{2\Delta T}
-$$
+```
 
 Although straightforward, finite differences can introduce numerical errors, particularly at short maturities and for deep in-the-money or out-of-the-money options.
 
@@ -119,7 +119,7 @@ To improve numerical stability, the final implementation uses an analytical form
 
 The implied volatility function is:
 
-$$
+```math
 \sigma_{\mathrm{imp}}(K,T)
 =
 0.20
@@ -127,34 +127,34 @@ $$
 0.10\left(\frac{K}{100}-1\right)^2
 +
 0.02T
-$$
+```
 
 This function incorporates a quadratic volatility smile and an upward-sloping term structure.
 
 Its first derivative with respect to strike is:
 
-$$
+```math
 \frac{\partial \sigma_{\mathrm{imp}}}{\partial K}
 =
 \frac{0.20}{100}
 \left(\frac{K}{100}-1\right)
-$$
+```
 
 Its second derivative with respect to strike is:
 
-$$
+```math
 \frac{\partial^2 \sigma_{\mathrm{imp}}}{\partial K^2}
 =
 \frac{0.20}{100^2}
-$$
+```
 
 The maturity derivative is:
 
-$$
+```math
 \frac{\partial \sigma_{\mathrm{imp}}}{\partial T}
 =
 0.02
-$$
+```
 
 These derivatives are incorporated into an analytical reformulation of Dupire's equation based on Black-Scholes implied volatility.
 
@@ -192,7 +192,7 @@ The calibration objective is to construct a local volatility function capable of
 
 After calibration, the underlying asset is simulated under the risk-neutral measure using a log-Euler discretization:
 
-$$
+```math
 S_{t+\Delta t}
 =
 S_t
@@ -201,24 +201,24 @@ S_t
 +
 \sigma_{\mathrm{loc}}(S_t,t)\sqrt{\Delta t}\,Z
 \right]
-$$
+```
 
 where $Z$ is a standard normal random variable.
 
 European call prices are estimated from discounted simulated payoffs:
 
-$$
+```math
 C_{\mathrm{model}}(K,T)
 =
 e^{-rT}
 \frac{1}{N}
 \sum_{i=1}^{N}
 \max(S_T^{(i)}-K,0)
-$$
+```
 
 Pricing accuracy is measured using the root mean squared error:
 
-$$
+```math
 \mathrm{RMSE}
 =
 \sqrt{
@@ -230,7 +230,7 @@ C_{\mathrm{model},j}
 C_{\mathrm{market},j}
 \right)^2
 }
-$$
+```
 
 ## 6. Model Configuration
 
@@ -244,6 +244,8 @@ $$
 | Monte Carlo paths | 200,000 |
 | Simulation time steps | 800 |
 | Validation options | 25 European calls |
+
+The validation options cover strikes of 80, 90, 100, 110 and 120, with maturities of 0.25, 0.50, 1.00, 1.50 and 2.00 years.
 
 ## 7. Calibration Results
 
@@ -330,4 +332,5 @@ Potential extensions include:
 ---
 
 **Disclaimer:** This project is intended for educational and quantitative finance research purposes only. It is not a production-ready pricing or risk management framework.
+
 
